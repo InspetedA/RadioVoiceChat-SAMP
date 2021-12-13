@@ -1,0 +1,196 @@
+/*
+                                    ______          _ _         _   _       _            _____ _           _   
+                                    | ___ \        | (_)       | | | |     (_)          /  __ \ |         | |  
+                                    | |_/ /__ _  __| |_  ___   | | | | ___  _  ___ ___  | /  \/ |__   __ _| |_ 
+                                    |    // _` |/ _` | |/ _ \  | | | |/ _ \| |/ __/ _ \ | |   | '_ \ / _` | __|
+                                    | |\ \ (_| | (_| | | (_) | \ \_/ / (_) | | (_|  __/ | \__/\ | | | (_| | |_ 
+                                    \_| \_\__,_|\__,_|_|\___/   \___/ \___/|_|\___\___|  \____/_| |_|\__,_|\__|
+                                                                           
+                                                                           
+
+/$$                           /$$                       /$$       /$$                       /$$   /$$                                        
+| $$                          | $$                      | $$      | $$                      | $$  | $$                                        
+| $$        /$$$$$$   /$$$$$$ | $$   /$$  /$$$$$$   /$$$$$$$      | $$$$$$$  /$$   /$$      | $$  | $$  /$$$$$$  /$$    /$$ /$$$$$$  /$$$$$$$ 
+| $$       /$$__  $$ |____  $$| $$  /$$/ /$$__  $$ /$$__  $$      | $$__  $$| $$  | $$      | $$$$$$$$ |____  $$|  $$  /$$//$$__  $$| $$__  $$
+| $$      | $$$$$$$$  /$$$$$$$| $$$$$$/ | $$$$$$$$| $$  | $$      | $$  \ $$| $$  | $$      | $$__  $$  /$$$$$$$ \  $$/$$/| $$$$$$$$| $$  \ $$
+| $$      | $$_____/ /$$__  $$| $$_  $$ | $$_____/| $$  | $$      | $$  | $$| $$  | $$      | $$  | $$ /$$__  $$  \  $$$/ | $$_____/| $$  | $$
+| $$$$$$$$|  $$$$$$$|  $$$$$$$| $$ \  $$|  $$$$$$$|  $$$$$$$      | $$$$$$$/|  $$$$$$$      | $$  | $$|  $$$$$$$   \  $/  |  $$$$$$$| $$  | $$
+|________/ \_______/ \_______/|__/  \__/ \_______/ \_______/      |_______/  \____  $$      |__/  |__/ \_______/    \_/    \_______/|__/  |__/
+                                                                             /$$  | $$                                                        
+                                                                            |  $$$$$$/                                                        
+                                                                             \______/                                                         
+                                                     
+                                                  _____       _                   _ _          
+                                                 /  ___|     | |                 (_) |         
+                                                 \ `--. _   _| |__  ___  ___ _ __ _| |__   ___ 
+                                                  `--. \ | | | '_ \/ __|/ __| '__| | '_ \ / _ \
+                                                 /\__/ / |_| | |_) \__ \ (__| |  | | |_) |  __/
+                                                 \____/ \__,_|_.__/|___/\___|_|  |_|_.__/ \___|
+
+                                                  (https://www.youtube.com/HavenCharlesPapasin)
+                                                            (http://azurhaven.ga/)
+                                                (https://github.com/InspetedA/RadioVoiceChat-SAMP)
+                                              
+*/
+
+
+// PUT THIS ON new pTazerReplace[MAX_PLAYERS]; (UP PART)
+
+new SV_GSTREAM:gstream = SV_NULL;
+new SV_GSTREAM:rstream = SV_NULL;
+new SV_GSTREAM:factionstream[MAX_FACTIONS] = { SV_NULL, ... };
+new SV_GSTREAM:gangstream[MAX_GANGS] = { SV_NULL, ... };
+new SV_LSTREAM:lstream[MAX_PLAYERS] = { SV_NULL, ... };
+
+
+//put this on OnplayerConnect (UP PART)
+
+public SV_VOID:OnPlayerActivationKeyPress(SV_UINT:playerid, SV_UINT:keyid) 
+{
+    // Attach player to local stream as speaker if 'B' key is pressed
+    if (keyid == 0x42 && lstream[playerid]) SvAttachSpeakerToStream(lstream[playerid], playerid);
+    //call
+    if (keyid == 0x5A && gstream) SvAttachSpeakerToStream(gstream, playerid);
+    //radio
+    if (keyid == 0x5A && rstream) SvAttachSpeakerToStream(rstream, playerid);
+     // Attach the player to the global stream as a speaker if the 'Z' key is pressed
+    
+    if(PlayerInfo[playerid][pFactionRadio] == 1)
+    {
+        if(keyid == 0x5A && factionstream[PlayerInfo[playerid][pFaction]]) SvAttachSpeakerToStream(factionstream[PlayerInfo[playerid][pFaction]], playerid);
+    }
+    if(PlayerInfo[playerid][pGangRadio] == 1)
+    {
+        if(keyid == 0x5A && gangstream[PlayerInfo[playerid][pGang]]) SvAttachSpeakerToStream(gangstream[PlayerInfo[playerid][pGang]], playerid);
+    }
+    else
+    {
+        if (keyid == 0x5A && lstream[playerid]) SvAttachSpeakerToStream(lstream[playerid], playerid);
+    }
+}
+
+public SV_VOID:OnPlayerActivationKeyRelease(SV_UINT:playerid, SV_UINT:keyid)
+{
+    // Detach the player from the local stream if the 'B' key is released
+    if (keyid == 0x42 && lstream[playerid]) SvDetachSpeakerFromStream(lstream[playerid], playerid);
+    //call
+    if (keyid == 0x5A && rstream) SvDetachSpeakerFromStream(gstream, playerid);
+     //radio
+    if (keyid == 0x5A && rstream) SvDetachSpeakerFromStream(rstream, playerid);
+    // Detach the player from the global stream if the 'Z' key is released
+    if(PlayerInfo[playerid][pFactionRadio] == 1)
+    {
+        if(keyid == 0x5A && factionstream[PlayerInfo[playerid][pFaction]]) SvDetachSpeakerFromStream(factionstream[PlayerInfo[playerid][pFaction]], playerid);
+    }
+    if(PlayerInfo[playerid][pGangRadio] == 1)
+    {
+        if(keyid == 0x5A && gangstream[PlayerInfo[playerid][pGang]]) SvDetachSpeakerFromStream(gangstream[PlayerInfo[playerid][pGang]], playerid);
+    }
+    else
+    {
+        if (keyid == 0x5A && lstream[playerid]) SvDetachSpeakerFromStream(lstream[playerid], playerid);
+    }
+}
+
+// PUT THIS ON pEnum
+
+    pFactionRadio,
+    pGangRadio,
+
+// PUT THIS ANYWHERE RECOMMENDED /G - Global Chat
+
+CMD:radiochat(playerid)
+{
+    new string[2048], status[128], statuss[128];
+    strcat(string, "Channel\tToggle\tDescription");
+    if(pData[playerid][pFactionRadio] == 0)
+    {
+    	status = "{ff0000}OFF{FFFFFF}";
+    }
+    else
+    {
+    	status = "{009900}ON{FFFFFF}";
+    }
+    if(pData[playerid][pGangRadio] == 0)
+    {
+    	statuss = "{ff0000}OFF{FFFFFF}";
+    }
+    else
+    {
+    	statuss = "{009900}ON{FFFFFF}";
+    }
+    format(string, sizeof(string), "%s\nFaction Radio\t%s\tRadio Channel for your faction\
+		\nGang Radio\t%s\tRadio Channel for your Gang.", string, status, statuss);
+    ShowPlayerDialog(playerid, DIALOG_VOICECHAT, DIALOG_STYLE_TABLIST_HEADERS, "Voice Chat Setup", string, "Toggle", "Close");
+    return 1;
+}
+
+// Put this on enum { DIALOG_NONE, DIALOG_REGISTER
+/*enum
+{
+    DIALOG_NONE,
+    DIALOG_REGISTER*/
+
+    DIALOG_VOICECHAT,
+
+// Put this on public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
+
+    if(dialogid == DIALOG_VOICECHAT)
+    {
+        if(response)
+        {
+            if(listitem == 0)
+            {
+                if(pData[playerid][pFaction] == -1)
+                {
+                    return SCM(playerid, COLOR_GREY, "You can't use this command as you're not apart of any faction.");
+                }
+                if(pData[playerid][pFactionRadio] == 0)
+                {
+                    pData[playerid][pFactionRadio] = 1;
+                    SvAttachListenerToStream(factionstream[pData[playerid][pFaction]], playerid);
+                    callcmd::radiochat(playerid);
+                    SM(playerid, COLOR_GREEN, "Succesfuly connected to %s radio channel.", FactionInfo[pData[playerid][pFaction]][fName]);
+                }
+                else if(pData[playerid][pFactionRadio] == 1)
+                {
+                    pData[playerid][pFactionRadio] = 0;
+                    SvDetachListenerFromStream(factionstream[pData[playerid][pFaction]], playerid);
+                    callcmd::radiochat(playerid);
+                    SM(playerid, COLOR_RED, "You have disconnected on %s radio channel.", FactionInfo[pData[playerid][pFaction]][fName]);
+                }
+            }
+            if(listitem == 1)
+            {
+                if(pData[playerid][pGang] == -1)
+                {
+                    return SCM(playerid, COLOR_GREY, "You are not apart of any gang at the moment.");
+                }
+                if(pData[playerid][pGangRadio] == 0)
+                {
+                    pData[playerid][pGangRadio] = 1;
+                    SvAttachListenerToStream(gangstream[pData[playerid][pGang]], playerid);
+                    callcmd::radiochat(playerid);
+                    SM(playerid, COLOR_GREEN, "Succesfuly connected to %s radio channel.", GangInfo[pData[playerid][pGang]][gName]);
+                }
+                else if(pData[playerid][pGangRadio] == 1)
+                {
+                    pData[playerid][pGangRadio] = 0;
+                    SvDetachListenerFromStream(gangstream[pData[playerid][pGang]], playerid);
+                    callcmd::radiochat(playerid);
+                    SM(playerid, COLOR_RED, "You have disconnected on %s radio channel.", GangInfo[pData[playerid][pGang]][gName]);
+                }
+            }
+        }
+    }
+
+    // PUT THIS ON YOUR REMOVE FACTION (factionid)
+
+    if(FactionInfo[factionid][fType] != FACTION_NONE)
+        {
+            factionstream[factionid] = SvCreateGStream(0xffff0000, "Faction Radio");
+        }
+
+    // PUT THIS ON YOUR Setupgang
+        gangstream[gangid] = SvCreateGStream(0xffff0000, "Gang Radio");
+
